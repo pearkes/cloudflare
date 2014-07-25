@@ -25,13 +25,6 @@ type Client struct {
 	Http *http.Client
 }
 
-// DoError is the error format that they return
-// to us if there is a problem
-type DoError struct {
-	Id      string `json:"id"`
-	Message string `json:"message"`
-}
-
 // NewClient returns a new cloudflare client,
 // requires an authorization token. You can generate
 // an OAuth token by visiting the Apps & API section
@@ -88,21 +81,6 @@ func (c *Client) NewRequest(params map[string]string, method string, action stri
 
 	return req, nil
 
-}
-
-// parseErr is used to take an error json resp
-// and return a single string for use in error messages
-func parseErr(resp *http.Response) error {
-	errBody := new(DoError)
-
-	err := decodeBody(resp, &errBody)
-
-	// if there was an error decoding the body, just return that
-	if err != nil {
-		return fmt.Errorf("Error parsing error body for non-200 request: %s", err)
-	}
-
-	return fmt.Errorf("API Error: %s: %s", errBody.Id, errBody.Message)
 }
 
 // decodeBody is used to JSON decode a body
