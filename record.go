@@ -3,7 +3,6 @@ package cloudflare
 import (
 	"errors"
 	"fmt"
-	"strconv"
 )
 
 type RecordsResponse struct {
@@ -66,12 +65,8 @@ type Record struct {
 	FullName string `json:"name"`
 	Value    string `json:"content"`
 	Type     string `json:"type"`
-	Priority int    `json:"prio"`
+	Priority string `json:"prio"`
 	Ttl      string `json:"ttl"`
-}
-
-func (r *Record) StringPriority() string {
-	return strconv.Itoa(r.Priority)
 }
 
 // CreateRecord contains the request parameters to create a new

@@ -40,7 +40,7 @@ func (s *S) Test_RetrieveRecord(c *C) {
 	c.Assert(err, IsNil)
 	c.Assert(record.Name, Equals, "direct")
 	c.Assert(record.Id, Equals, "16606009")
-	c.Assert(record.StringPriority(), Equals, "0")
+	c.Assert(record.Priority, Equals, "")
 }
 
 func (s *S) Test_RetrieveRecord_Bad(c *C) {
