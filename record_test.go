@@ -11,7 +11,7 @@ func TestRecord(t *testing.T) {
 }
 
 func (s *S) Test_CreateRecord(c *C) {
-	testServer.Response(202, nil, recordExample)
+	testServer.Response(200, nil, recordExample)
 
 	opts := CreateRecord{
 		Type:    "A",
@@ -43,8 +43,19 @@ func (s *S) Test_RetrieveRecord(c *C) {
 	c.Assert(record.StringPriority(), Equals, "0")
 }
 
+func (s *S) Test_RetrieveRecord_Bad(c *C) {
+	testServer.Response(200, nil, recordsErrorExample)
+
+	record, err := s.client.RetrieveRecord("example.com", "16606009")
+
+	_ = testServer.WaitRequest()
+
+	c.Assert(err.Error(), Equals, "API Error: Invalid zone.")
+	c.Assert(record, IsNil)
+}
+
 func (s *S) Test_DestroyRecord(c *C) {
-	testServer.Response(204, nil, "")
+	testServer.Response(200, nil, recordDeleteExample)
 
 	err := s.client.DestroyRecord("example.com", "25")
 
@@ -53,8 +64,25 @@ func (s *S) Test_DestroyRecord(c *C) {
 	c.Assert(err, IsNil)
 }
 
+func (s *S) Test_UpdateRecord_Bad(c *C) {
+	testServer.Response(200, nil, recordErrorExample)
+
+	opts := UpdateRecord{
+		Name: "foobar",
+		Type: "CNAME",
+	}
+
+	err := s.client.UpdateRecord("example.com", "16606009", &opts)
+
+	req := testServer.WaitRequest()
+
+	c.Assert(req.Form["type"], DeepEquals, []string{"CNAME"})
+	c.Assert(req.Form["name"], DeepEquals, []string{"foobar"})
+	c.Assert(err.Error(), Equals, "API Error: Invalid record id.")
+}
+
 func (s *S) Test_UpdateRecord(c *C) {
-	testServer.Response(204, nil, "")
+	testServer.Response(200, nil, recordExample)
 
 	opts := UpdateRecord{
 		Name: "foobar",
@@ -71,8 +99,32 @@ func (s *S) Test_UpdateRecord(c *C) {
 }
 
 var recordErrorExample = `{
-  "id": "unprocessable_entity",
-  "message": "Type can't be blank."
+  "request": {
+    "act": "rec_edit"
+  },
+  "result": "error",
+  "msg": "Invalid record id."
+}`
+
+var recordsErrorExample = `{
+  "request": {
+    "act": "rec_load_all"
+  },
+  "result": "error",
+  "msg": "Invalid zone."
+}`
+
+var recordDeleteExample = `{
+  "request": {
+    "act": "rec_delete",
+    "a": "rec_delete",
+    "tkn": "1296c62233d48a6cf0585b0c1dddc3512e4b2",
+    "id": "23735515",
+    "email": "sample@example.com",
+    "z": "example.com"
+  },
+  "result": "success",
+  "msg": null
 }`
 
 var recordsExample = `{

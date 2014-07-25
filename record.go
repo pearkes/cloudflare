@@ -12,9 +12,15 @@ type RecordsResponse struct {
 			Records []Record `json:"objs"`
 		} `json:"recs"`
 	} `json:"response"`
+	Result  string `json:"result"`
+	Message string `json:"msg"`
 }
 
 func (r *RecordsResponse) FindRecord(id string) (*Record, error) {
+	if r.Result == "error" {
+		return nil, fmt.Errorf("API Error: %s", r.Message)
+	}
+
 	objs := r.Response.Recs.Records
 	notFoundErr := errors.New("Record not found")
 
@@ -39,10 +45,16 @@ type RecordResponse struct {
 			Record Record `json:"obj"`
 		} `json:"rec"`
 	} `json:"response"`
+	Result  string `json:"result"`
+	Message string `json:"msg"`
 }
 
-func (r *RecordResponse) GetRecord() *Record {
-	return &r.Response.Rec.Record
+func (r *RecordResponse) GetRecord() (*Record, error) {
+	if r.Result == "error" {
+		return nil, fmt.Errorf("API Error: %s", r.Message)
+	}
+
+	return &r.Response.Rec.Record, nil
 }
 
 // Record is used to represent a retrieved Record. All properties
@@ -115,9 +127,13 @@ func (c *Client) CreateRecord(domain string, opts *CreateRecord) (*Record, error
 	if err != nil {
 		return nil, fmt.Errorf("Error parsing record response: %s", err)
 	}
+	record, err := recordResp.GetRecord()
+	if err != nil {
+		return nil, err
+	}
 
 	// The request was successful
-	return recordResp.GetRecord(), nil
+	return record, nil
 }
 
 // DestroyRecord destroys a record by the ID specified and
@@ -134,10 +150,22 @@ func (c *Client) DestroyRecord(domain string, id string) error {
 		return err
 	}
 
-	_, err = checkResp(c.Http.Do(req))
+	resp, err := checkResp(c.Http.Do(req))
 
 	if err != nil {
-		return fmt.Errorf("Error destroying record: %s", err)
+		return fmt.Errorf("Error deleting record: %s", err)
+	}
+
+	recordResp := new(RecordResponse)
+
+	err = decodeBody(resp, &recordResp)
+
+	if err != nil {
+		return fmt.Errorf("Error parsing record response: %s", err)
+	}
+	_, err = recordResp.GetRecord()
+	if err != nil {
+		return err
 	}
 
 	// The request was successful
@@ -181,15 +209,26 @@ func (c *Client) UpdateRecord(domain string, id string, opts *UpdateRecord) erro
 	}
 
 	req, err := c.NewRequest(params, "POST", "rec_edit")
-
 	if err != nil {
 		return err
 	}
 
-	_, err = checkResp(c.Http.Do(req))
+	resp, err := checkResp(c.Http.Do(req))
 
 	if err != nil {
 		return fmt.Errorf("Error updating record: %s", err)
+	}
+
+	recordResp := new(RecordResponse)
+
+	err = decodeBody(resp, &recordResp)
+
+	if err != nil {
+		return fmt.Errorf("Error parsing record response: %s", err)
+	}
+	_, err = recordResp.GetRecord()
+	if err != nil {
+		return err
 	}
 
 	// The request was successful
