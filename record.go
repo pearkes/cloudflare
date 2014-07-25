@@ -90,6 +90,7 @@ type CreateRecord struct {
 func (c *Client) CreateRecord(domain string, opts *CreateRecord) (*Record, error) {
 	// Make the request parameters
 	params := make(map[string]string)
+	params["z"] = domain
 
 	params["type"] = opts.Type
 
@@ -187,6 +188,8 @@ type UpdateRecord struct {
 // the Record was succesfully updated.
 func (c *Client) UpdateRecord(domain string, id string, opts *UpdateRecord) error {
 	params := make(map[string]string)
+	params["z"] = domain
+	params["id"] = id
 
 	if opts.Type != "" {
 		params["type"] = opts.Type
@@ -242,6 +245,7 @@ func (c *Client) RetrieveRecord(domain string, id string) (*Record, error) {
 	params := make(map[string]string)
 	// The zone we want
 	params["z"] = domain
+	params["id"] = id
 
 	req, err := c.NewRequest(params, "GET", "rec_load_all")
 
