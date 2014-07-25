@@ -186,9 +186,7 @@ func (c *Client) UpdateRecord(domain string, id string, opts *UpdateRecord) erro
 	params["z"] = domain
 	params["id"] = id
 
-	if opts.Type != "" {
-		params["type"] = opts.Type
-	}
+	params["type"] = opts.Type
 
 	if opts.Name != "" {
 		params["name"] = opts.Name
