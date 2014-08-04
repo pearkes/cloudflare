@@ -26,6 +26,29 @@ func (s *S) Test_CreateRecord(c *C) {
 	c.Assert(req.Form["type"], DeepEquals, []string{"A"})
 	c.Assert(req.Form["name"], DeepEquals, []string{"foobar"})
 	c.Assert(req.Form["content"], DeepEquals, []string{"10.0.0.1"})
+	c.Assert(req.Form["ttl"], DeepEquals, []string{"1"})
+	c.Assert(err, IsNil)
+	c.Assert(record.Id, Equals, "23734516")
+}
+
+func (s *S) Test_CreateRecordWithTTL(c *C) {
+	testServer.Response(200, nil, recordExample)
+
+	opts := CreateRecord{
+		Type:    "A",
+		Name:    "foobar",
+		Content: "10.0.0.1",
+		Ttl:     "600",
+	}
+
+	record, err := s.client.CreateRecord("example.com", &opts)
+
+	req := testServer.WaitRequest()
+
+	c.Assert(req.Form["type"], DeepEquals, []string{"A"})
+	c.Assert(req.Form["name"], DeepEquals, []string{"foobar"})
+	c.Assert(req.Form["content"], DeepEquals, []string{"10.0.0.1"})
+	c.Assert(req.Form["ttl"], DeepEquals, []string{"600"})
 	c.Assert(err, IsNil)
 	c.Assert(record.Id, Equals, "23734516")
 }
