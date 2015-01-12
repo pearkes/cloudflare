@@ -3,6 +3,7 @@ package cloudflare
 import (
 	"errors"
 	"fmt"
+	"strings"
 )
 
 type RecordsResponse struct {
@@ -36,6 +37,33 @@ func (r *RecordsResponse) FindRecord(id string) (*Record, error) {
 	}
 
 	return nil, notFoundErr
+}
+
+func (r *RecordsResponse) FindRecordByName(name string, wildcard bool) ([]Record, error) {
+	if r.Result == "error" {
+		return nil, fmt.Errorf("API Error: %s", r.Message)
+	}
+
+	objs := r.Response.Recs.Records
+	notFoundErr := errors.New("Record not found")
+
+	// No objects, return nil
+	if len(objs) < 0 {
+		return nil, notFoundErr
+	}
+
+	var recs []Record
+	suffix := "." + name
+
+	for _, v := range objs {
+		if v.Name == name {
+			recs = append(recs, v)
+		} else if wildcard && strings.HasSuffix(v.Name, suffix) {
+			recs = append(recs, v)
+		}
+	}
+
+	return recs, nil
 }
 
 type RecordResponse struct {
@@ -231,6 +259,39 @@ func (c *Client) UpdateRecord(domain string, id string, opts *UpdateRecord) erro
 
 	// The request was successful
 	return nil
+}
+
+func (c *Client) RetrieveRecordsByName(domain string, name string, wildcard bool) ([]Record, error) {
+	params := make(map[string]string)
+	// The zone we want
+	params["z"] = domain
+
+	req, err := c.NewRequest(params, "GET", "rec_load_all")
+
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := checkResp(c.Http.Do(req))
+	if err != nil {
+		return nil, fmt.Errorf("Error destroying record: %s", err)
+	}
+
+	records := new(RecordsResponse)
+
+	err = decodeBody(resp, records)
+
+	if err != nil {
+		return nil, fmt.Errorf("Error decoding record response: %s", err)
+	}
+
+	record, err := records.FindRecordByName(name, wildcard)
+	if err != nil {
+		return nil, err
+	}
+
+	// The request was successful
+	return record, nil
 }
 
 // RetrieveRecord gets  a record by the ID specified and
