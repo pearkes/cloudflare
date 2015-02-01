@@ -87,7 +87,7 @@ func TestClient_NewRequest(t *testing.T) {
 		t.Fatalf("bad: %v", encoded)
 	}
 
-	if encoded.Get("baz") != "bar" {
+	if encoded.Get("a") != "baz" {
 		t.Fatalf("bad: %v", encoded)
 	}
 	expected := "https://www.cloudflare.com/api_json.html?a=baz&baz=bar&email=foobaremail&foo=bar&tkn=foobartoken"
