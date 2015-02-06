@@ -73,7 +73,7 @@ func TestClient_NewRequest(t *testing.T) {
 		"foo": "bar",
 		"baz": "bar",
 	}
-	req, err := c.NewRequest(params, "POST", "baz")
+	req, err := c.NewRequest(params, "POST", "bar")
 	if err != nil {
 		t.Fatalf("bad: %v", err)
 	}
@@ -87,10 +87,10 @@ func TestClient_NewRequest(t *testing.T) {
 		t.Fatalf("bad: %v", encoded)
 	}
 
-	if encoded.Get("baz") != "bar" {
+	if encoded.Get("a") != "bar" {
 		t.Fatalf("bad: %v", encoded)
 	}
-	expected := "https://www.cloudflare.com/api_json.html?a=baz&baz=bar&email=foobaremail&foo=bar&tkn=foobartoken"
+	expected := "https://www.cloudflare.com/api_json.html?a=bar&baz=bar&email=foobaremail&foo=bar&tkn=foobartoken"
 	if req.URL.String() != expected {
 		t.Fatalf("bad base url: %v\n\nexpected: %v", req.URL.String(), expected)
 	}
