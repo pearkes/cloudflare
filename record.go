@@ -311,7 +311,7 @@ func (c *Client) RetrieveRecord(domain string, id string) (*Record, error) {
 
 	resp, err := checkResp(c.Http.Do(req))
 	if err != nil {
-		return nil, fmt.Errorf("Error destroying record: %s", err)
+		return nil, fmt.Errorf("Error retrieving record: %s", err)
 	}
 
 	records := new(RecordsResponse)
