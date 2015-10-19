@@ -43,7 +43,7 @@ func NewClient(email string, token string) (*Client, error) {
 		Token: token,
 		Email: email,
 		URL:   "https://www.cloudflare.com/api_json.html",
-		Http:  http.DefaultClient,
+		Http:  &http.Client{},
 	}
 	return &client, nil
 }
