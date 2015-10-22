@@ -8,7 +8,7 @@ import (
 	"net/url"
 	"os"
 
-	"github.com/hashicorp/cleanhttp"
+	"github.com/hashicorp/go-cleanhttp"
 )
 
 // Client provides a client to the CloudflAre API
