@@ -262,27 +262,9 @@ func (c *Client) UpdateRecord(domain string, id string, opts *UpdateRecord) erro
 }
 
 func (c *Client) RetrieveRecordsByName(domain string, name string, wildcard bool) ([]Record, error) {
-	params := make(map[string]string)
-	// The zone we want
-	params["z"] = domain
-
-	req, err := c.NewRequest(params, "GET", "rec_load_all")
-
+	records, err := c.retrieveRecordsByDomain(domain)
 	if err != nil {
-		return nil, err
-	}
-
-	resp, err := checkResp(c.Http.Do(req))
-	if err != nil {
-		return nil, fmt.Errorf("Error retrieving record: %s", err)
-	}
-
-	records := new(RecordsResponse)
-
-	err = decodeBody(resp, records)
-
-	if err != nil {
-		return nil, fmt.Errorf("Error decoding record response: %s", err)
+		return nil, fmt.Errorf("Error decoding records response: %s", err)
 	}
 
 	record, err := records.FindRecordByName(name, wildcard)
@@ -298,10 +280,36 @@ func (c *Client) RetrieveRecordsByName(domain string, name string, wildcard bool
 // returns a Record and an error. An error will be returned for failed
 // requests with a nil Record.
 func (c *Client) RetrieveRecord(domain string, id string) (*Record, error) {
+	records, err := c.retrieveRecordsByDomain(domain, id)
+	if err != nil {
+		return nil, fmt.Errorf("Error decoding records response: %s", err)
+	}
+
+	record, err := records.FindRecord(id)
+	if err != nil {
+		return nil, err
+	}
+
+	// The request was successful
+	return record, nil
+}
+
+// RetrieveRecordsByDomain - Retrieves all domain records.
+func (c *Client) RetrieveRecordsByDomain(domain string) ([]Record, error) {
+	res, err := c.retrieveRecordsByDomain(domain)
+	if err != nil {
+		return nil, err
+	}
+	return res.Response.Recs.Records, nil
+}
+
+func (c *Client) retrieveRecordsByDomain(domain string, id ...string) (*RecordsResponse, error) {
 	params := make(map[string]string)
 	// The zone we want
 	params["z"] = domain
-	params["id"] = id
+	if len(id) == 1 {
+		params["id"] = id[0]
+	}
 
 	req, err := c.NewRequest(params, "GET", "rec_load_all")
 
@@ -315,18 +323,9 @@ func (c *Client) RetrieveRecord(domain string, id string) (*Record, error) {
 	}
 
 	records := new(RecordsResponse)
-
 	err = decodeBody(resp, records)
-
 	if err != nil {
 		return nil, fmt.Errorf("Error decoding record response: %s", err)
 	}
-
-	record, err := records.FindRecord(id)
-	if err != nil {
-		return nil, err
-	}
-
-	// The request was successful
-	return record, nil
+	return records, err
 }
